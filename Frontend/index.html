@@ -11,6 +11,7 @@
         .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-primary { background-color: #db2777; border: none; }
         .btn-primary:hover { background-color: #be185d; }
+        .border-info { border-left: 5px solid #db2777 !important; } /* เปลี่ยนสีขอบให้เข้าธีมชมพู */
     </style>
 </head>
 <body>
@@ -26,12 +27,10 @@
         <div class="col-md-4 mb-4">
             <div class="card p-4">
                 <h4 class="mb-3">จองคิวใหม่</h4>
-    
                 <div class="mb-3">
                     <label class="form-label">ชื่อ</label>
                     <input type="text" id="firstname" class="form-control" placeholder="กรอกชื่อ">
                 </div>
-
                 <div class="mb-3">
                     <label class="form-label">นามสกุล</label>
                     <input type="text" id="lastname" class="form-control" placeholder="กรอกนามสกุล">
@@ -74,7 +73,7 @@
 <script>
     const API_URL = 'http://localhost:8000';
 
-    // 1. โหลดบริการมาใส่ใน Select
+    // 1. โหลดรายการบริการจาก DB
     function loadServices() {
         fetch(`${API_URL}/services`)
             .then(res => res.json())
@@ -87,27 +86,21 @@
             .catch(err => console.error("Error loading services:", err));
     }
 
-    // 2. ฟังก์ชันจองคิว พร้อม CHECK ค่าว่าง
+    // 2. ฟังก์ชันจองคิว
     function makeBooking() {
-        // ดึงค่าจากหน้าจอ
         const firstname = document.getElementById('firstname').value.trim();
+        const lastname = document.getElementById('lastname').value.trim();
+        const phone = document.getElementById('phone').value.trim();
         const serviceId = document.getElementById('serviceSelect').value;
         const date = document.getElementById('bookDate').value;
         const time = document.getElementById('bookTime').value;
 
-        // --- ส่วนตรวจสอบข้อมูล (Validation) ---
-        if (!firstname) { alert("กรุณากรอกชื่อผู้จอง"); return; }
-        if (!serviceId) { alert("กรุณาเลือกบริการ"); return; }
-        if (!date) { alert("กรุณาเลือกวันที่"); return; }
-        if (!time) { alert("กรุณาเลือกเวลา"); return; }
-        // ----------------------------------
+        if (!firstname || !lastname || !phone || !serviceId || !date || !time) {
+            alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+            return;
+        }
 
-        const bodyData = {
-            user_id: 1, // สมมติค่าไว้ก่อน
-            service_id: serviceId,
-            booking_date: date,
-            booking_time: time
-        };
+        const bodyData = { firstname, lastname, phone, service_id: serviceId, booking_date: date, booking_time: time };
 
         fetch(`${API_URL}/booking`, {
             method: 'POST',
@@ -116,16 +109,17 @@
         })
         .then(res => res.json())
         .then(data => {
-            alert(data.message);
-            // ล้างค่าหลังจองเสร็จ
-            document.getElementById('bookDate').value = "";
-            document.getElementById('bookTime').value = "";
-            loadBookings(); // รีเฟรชตาราง
+            alert(data.message || "จองสำเร็จ!");
+            // ล้างข้อมูลหลังจอง
+            document.getElementById('firstname').value = "";
+            document.getElementById('lastname').value = "";
+            document.getElementById('phone').value = "";
+            loadBookings(); 
         })
         .catch(err => alert("เกิดข้อผิดพลาดในการบันทึก"));
     }
 
-    // 3. ดึงรายการนัดหมาย
+    // 3. แสดงรายการนัดหมาย
     function loadBookings() {
         const date = document.getElementById('filterDate').value;
         if (!date) return;
@@ -144,26 +138,47 @@
                             <h6>👤 ${item.fullname}</h6>
                             <p class="mb-1 text-muted">💇 ${item.service_name}</p>
                             <p class="mb-2 text-primary">⏰ ${item.booking_time} น.</p>
-                            <button onclick="cancelBooking(${item.id})" class="btn btn-outline-danger btn-sm">ยกเลิกนัด</button>
+                            <div class="d-flex gap-2">
+                                <button onclick="cancelBooking(${item.id})" class="btn btn-outline-danger btn-sm w-100">ยกเลิก</button>
+                                <button onclick="rescheduleBooking(${item.id})" class="btn btn-outline-primary btn-sm w-100">เลื่อนนัด</button>
+                            </div>
                         </div>
                     </div>
                 `).join('');
             });
     }
 
-    // 4. ยกเลิกนัด
+    // 4. ฟังก์ชันเลื่อนนัด
+    function rescheduleBooking(id) {
+        const newDate = prompt("ระบุวันที่ใหม่ (รูปแบบ YYYY-MM-DD):", document.getElementById('filterDate').value);
+        const newTime = prompt("ระบุเวลาใหม่ (รูปแบบ HH:MM):");
+        
+        if (newDate && newTime) {
+            fetch(`${API_URL}/booking/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_date: newDate, new_time: newTime })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message || "เลื่อนนัดสำเร็จ");
+                loadBookings();
+            });
+        }
+    }
+
+    // 5. ยกเลิกนัด
     function cancelBooking(id) {
         if (confirm('ยืนยันการลบนัดหมายนี้?')) {
             fetch(`${API_URL}/booking/${id}`, { method: 'DELETE' })
                 .then(res => res.json())
                 .then(data => {
-                    alert(data.message);
+                    alert(data.message || "ลบสำเร็จ");
                     loadBookings();
                 });
         }
     }
 
-    // รันตอนโหลดหน้าเว็บครั้งแรก
     window.onload = () => {
         loadServices();
         document.getElementById('filterDate').valueAsDate = new Date();
