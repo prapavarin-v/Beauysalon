@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salon Booking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #fdf2f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar { background-color: #db2777 !important; }
+        .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-primary { background-color: #db2777; border: none; }
+        .btn-primary:hover { background-color: #be185d; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark mb-4">
+    <div class="container">
+        <span class="navbar-brand mb-0 h1">💅 BeautySalon Booking</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card p-4">
+                <h4>จองคิวใหม่</h4>
+                
+                <div class="mb-3">
+                    <label class="form-label">ชื่อลูกค้า</label>
+                    <input type="text" id="fullname" class="form-control" placeholder="ชื่อ-นามสกุล">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">เบอร์โทรศัพท์</label>
+                    <input type="text" id="phone" class="form-control" placeholder="08x-xxxxxxx">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">เลือกบริการ</label>
+                    <select id="serviceSelect" class="form-select"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">วันที่</label>
+                    <input type="date" id="bookDate" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">เวลา</label>
+                    <input type="time" id="bookTime" class="form-control">
+                </div>
+                <button onclick="makeBooking()" class="btn btn-primary w-100">ยืนยันการจอง</button>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4>ตารางนัดหมายรายวัน</h4>
+                    <input type="date" id="filterDate" class="form-control w-50" onchange="loadBookings()">
+                </div>
+                <div id="bookingList" class="row">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. ดึงข้อมูลบริการมาใส่ใน Dropdown ทันทีที่เปิดหน้าเว็บ
+    function loadServices() {
+        fetch('http://localhost:3000/services')
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('serviceSelect');
+                select.innerHTML = data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
+            });
+    }
+
+    // 2. ฟังก์ชันจองคิว (POST)
+    function makeBooking() {
+        const body = {
+            user_id: 1, // สมมติ Login เป็นคนแรก
+            service_id: document.getElementById('serviceSelect').value,
+            booking_date: document.getElementById('bookDate').value,
+            booking_time: document.getElementById('bookTime').value
+        };
+
+        fetch('http://localhost:3000/booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(res => res.json()).then(data => {
+            alert(data.message);
+            loadBookings(); // จองเสร็จแล้วรีเฟรชรายการด้านข้าง
+        });
+    }
+
+    // 3. ดึงรายการนัดหมายมาโชว์แบบ Card (สไตล์อาจารย์)
+    function loadBookings() {
+        const date = document.getElementById('filterDate').value;
+        if (!date) return;
+
+        fetch(`http://localhost:3000/admin/bookings/${date}`)
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('bookingList');
+                if (data.length === 0) {
+                    list.innerHTML = '<p class="text-center">ไม่มีนัดหมายในวันนี้</p>';
+                    return;
+                }
+                list.innerHTML = data.map(item => `
+                    <div class="col-md-6 mb-3">
+                        <div class="card p-3 border-start border-info border-5">
+                            <h6>👤 ${item.fullname}</h6>
+                            <p class="mb-1 text-muted">💇 ${item.service_name}</p>
+                            <p class="mb-2 text-primary">⏰ ${item.booking_time} น.</p>
+                            <button onclick="cancelBooking(${item.id})" class="btn btn-outline-danger btn-sm">ยกเลิกนัด</button>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
+
+    // 4. ยกเลิกนัดหมาย (DELETE)
+    function cancelBooking(id) {
+        if (confirm('ยืนยันการลบนัดหมายนี้?')) {
+            fetch(`http://localhost:3000/booking/${id}`, { method: 'DELETE' })
+                .then(() => loadBookings());
+        }
+    }
+
+    // รันคำสั่งเริ่มต้น
+    loadServices();
+    document.getElementById('filterDate').valueAsDate = new Date(); // ตั้งค่าวันที่เป็นวันนี้
+    loadBookings();
+</script>
+
+</body>
+</html>
