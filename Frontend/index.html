@@ -25,11 +25,16 @@
     <div class="row">
         <div class="col-md-4 mb-4">
             <div class="card p-4">
-                <h4>จองคิวใหม่</h4>
-                
+                <h4 class="mb-3">จองคิวใหม่</h4>
+    
                 <div class="mb-3">
-                    <label class="form-label">ชื่อลูกค้า</label>
-                    <input type="text" id="fullname" class="form-control" placeholder="ชื่อ-นามสกุล">
+                    <label class="form-label">ชื่อ</label>
+                    <input type="text" id="firstname" class="form-control" placeholder="กรอกชื่อ">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">นามสกุล</label>
+                    <input type="text" id="lastname" class="form-control" placeholder="กรอกนามสกุล">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">เบอร์โทรศัพท์</label>
@@ -67,13 +72,14 @@
 <script>
     // 1. ดึงข้อมูลบริการมาใส่ใน Dropdown ทันทีที่เปิดหน้าเว็บ
     function loadServices() {
-        fetch('http://localhost:3000/services')
+        fetch('http://localhost:8000/services')
             .then(res => res.json())
             .then(data => {
                 const select = document.getElementById('serviceSelect');
                 select.innerHTML = data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
             });
     }
+    loadServices();
 
     // 2. ฟังก์ชันจองคิว (POST)
     function makeBooking() {
@@ -84,7 +90,7 @@
             booking_time: document.getElementById('bookTime').value
         };
 
-        fetch('http://localhost:3000/booking', {
+        fetch('http://localhost:8000/booking', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
@@ -94,12 +100,13 @@
         });
     }
 
-    // 3. ดึงรายการนัดหมายมาโชว์แบบ Card (สไตล์อาจารย์)
+
+    // 3. ดึงรายการนัดหมาย
     function loadBookings() {
         const date = document.getElementById('filterDate').value;
         if (!date) return;
 
-        fetch(`http://localhost:3000/admin/bookings/${date}`)
+        fetch(`http://localhost:8000/admin/bookings/${date}`)
             .then(res => res.json())
             .then(data => {
                 const list = document.getElementById('bookingList');
@@ -123,7 +130,7 @@
     // 4. ยกเลิกนัดหมาย (DELETE)
     function cancelBooking(id) {
         if (confirm('ยืนยันการลบนัดหมายนี้?')) {
-            fetch(`http://localhost:3000/booking/${id}`, { method: 'DELETE' })
+            fetch(`http://localhost:8000/booking/${id}`, { method: 'DELETE' })
                 .then(() => loadBookings());
         }
     }

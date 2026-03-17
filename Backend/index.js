@@ -40,6 +40,8 @@ app.get('/admin/bookings/:date', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
 // ยกเลิกการจอง
 app.delete('/booking/:id', async (req, res) => {
     const { id } = req.params;
