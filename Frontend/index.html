@@ -205,19 +205,29 @@
     }
 
     function rescheduleBooking(id) {
-        const newDate = prompt("ระบุวันที่ใหม่ (YYYY-MM-DD):", document.getElementById('filterDate').value);
-        const newTime = prompt("ระบุเวลาใหม่ (HH:MM):");
-        if (newDate && newTime) {
-            fetch(`${API_URL}/booking/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ new_date: newDate, new_time: newTime })
-            }).then(() => {
-                showToast("เลื่อนนัดสำเร็จ");
-                loadBookings();
-            });
-        }
+    const newDate = prompt("ระบุวันที่ใหม่ (YYYY-MM-DD):", document.getElementById('filterDate').value);
+    const newTime = prompt("ระบุเวลาใหม่ (HH:MM):");
+    
+    if (newDate && newTime) {
+        fetch(`${API_URL}/booking/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ new_date: newDate, new_time: newTime })
+        })
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message); // ดึง Error message มาโชว์
+            return data;
+        })
+        .then(() => {
+            showToast("เลื่อนนัดสำเร็จ", "success");
+            loadBookings();
+        })
+        .catch(err => {
+            showToast(err.message, "error"); // ถ้าซ้ำจะขึ้น Toast สีแดงแจ้งเตือน
+        });
     }
+}
 
     function cancelBooking(id) {
         if (confirm('ยืนยันการยกเลิกนัดหมาย')) {

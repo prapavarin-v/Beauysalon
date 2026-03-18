@@ -100,18 +100,33 @@ app.delete('/booking/:id', async (req, res) => {
     }
 });
 
-// 5. เลื่อนนัดหมาย
+// 5. เลื่อนนัดหมาย (เพิ่มการเช็กเวลาซ้ำก่อนอัปเดต)
 app.put('/booking/:id', async (req, res) => {
     const { id } = req.params;
     const { new_date, new_time } = req.body;
+
     try {
+        // 1. เช็กก่อนว่า "เวลาใหม่" ที่จะเลื่อนไป มีคนอื่นจองไว้หรือยัง
+        // โดยต้องเช็กด้วยว่า ID ที่จองนั้นไม่ใช่ ID เดิมของตัวเอง (ป้องกันกรณีแก้ไขข้อมูลเดิมแล้วกดซ้ำที่เดิม)
+        const [existing] = await db.query(
+            'SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND id != ?',
+            [new_date, new_time, id]
+        );
+
+        if (existing.length > 0) {
+            return res.status(400).json({ message: 'ไม่สามารถเลื่อนนัดได้ เนื่องจากเวลานี้มีผู้จองแล้ว' });
+        }
+
+        // 2. ถ้าผ่านการเช็ก ให้ทำการ Update
         await db.query(
             'UPDATE bookings SET booking_date = ?, booking_time = ? WHERE id = ?',
             [new_date, new_time, id] 
         );
+        
         res.json({ message: 'เลื่อนนัดหมายสำเร็จ' });
     } catch (err) {
-        res.status(500).json({ message: 'Error: ' + err.message });
+        console.error(err);
+        res.status(500).json({ message: 'เกิดข้อผิดพลาด: ' + err.message });
     }
 });
 
