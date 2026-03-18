@@ -3,278 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salon Booking | Pastel Premium</title>
+    <title>จองคิว | Premium Salon</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* CSS เพิ่มเติมสำหรับระบบ Validation */
-        .is-invalid { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
-        
-        .status-toast {
-            position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem;
-            border-radius: 16px; color: white; font-weight: 600; z-index: 9999;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none;
-            animation: slideIn 0.3s ease-out;
-        }
-        .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
-        .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    </style>
 </head>
 <body>
+    <div id="statusToast" class="status-toast" style="display:none; position:fixed; top:20px; right:20px; padding:1rem; border-radius:12px; color:white; z-index:9999;"></div>
 
-<div id="statusToast" class="status-toast"></div>
+    <nav class="navbar mb-5 shadow-sm">
+        <div class="container justify-content-center">
+            <span class="navbar-brand"><i class="fa-solid fa-crown me-2"></i> Premium Salon</span>
+        </div>
+    </nav>
 
-<nav class="navbar navbar-light sticky-top mb-5">
     <div class="container">
-        <span class="navbar-brand">
-            <i class="fa-solid fa-crown me-3"></i> Beauty Salon
-        </span>
-    </div>
-</nav>
-
-<div class="container pb-5">
-    <div class="row g-4">
-        <div class="col-lg-4 col-md-5">
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <h4 class="mb-4"><i class="fa-solid fa-calendar-plus me-2 icon-pink"></i>จองคิวใหม่</h4>
-                    <div class="mb-3">
-                        <label class="form-label">ชื่อ</label>
-                        <input type="text" id="firstname" class="form-control" placeholder="กรอกชื่อ">
+        <div class="row justify-content-center">
+            <div class="col-lg-5 col-md-8">
+                <div class="card p-4 shadow-lg border-0">
+                    <h4 class="mb-4 fw-bold text-center" style="color: var(--rose-gold-deep);"><i class="fa-solid fa-calendar-plus me-2"></i>จองคิวใช้บริการ</h4>
+                    <div class="row g-3">
+                        <div class="col-6"><label class="form-label">ชื่อ</label><input type="text" id="firstname" class="form-control" placeholder="ชื่อ"></div>
+                        <div class="col-6"><label class="form-label">นามสกุล</label><input type="text" id="lastname" class="form-control" placeholder="นามสกุล"></div>
+                        <div class="col-12"><label class="form-label">เบอร์โทรศัพท์</label><input type="text" id="phone" class="form-control" placeholder="08x-xxxxxxx"></div>
+                        <div class="col-12"><label class="form-label">บริการที่ต้องการ</label><select id="serviceSelect" class="form-select"></select></div>
+                        <div class="col-6"><label class="form-label">วันที่</label><input type="date" id="bookDate" class="form-control"></div>
+                        <div class="col-6"><label class="form-label">เวลา</label><input type="time" id="bookTime" class="form-control"></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">นามสกุล</label>
-                        <input type="text" id="lastname" class="form-control" placeholder="กรอกนามสกุล">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">เบอร์โทรศัพท์</label>
-                        <input type="text" id="phone" class="form-control" placeholder="08x-xxxxxxx">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">เลือกบริการ</label>
-                        <select id="serviceSelect" class="form-select">
-                            <option value="">-- เลือกบริการ --</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="form-label">วันที่</label>
-                            <input type="date" id="bookDate" class="form-control">
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label">เวลา</label>
-                            <input type="time" id="bookTime" class="form-control">
-                        </div>
-                    </div>
-                    <button onclick="makeBooking()" class="btn btn-primary w-100 mt-2">ยืนยันการจอง</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-8 col-md-7">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0">ตารางนัดหมายรายวัน</h4>
-                        <input type="date" id="filterDate" class="form-control w-50" onchange="loadBookings()">
-                    </div>
-                    <div id="bookingList" class="row g-3"></div>
+                    <button onclick="makeBooking()" class="btn btn-primary w-100 mt-4 py-3 fw-bold">ยืนยันการจองคิว</button>
+                    <div class="text-center mt-3"><a href="schedule.html" class="text-muted small text-decoration-none"><i class="fa-solid fa-list me-1"></i> ดูตารางคิวจอง</a></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    const API_URL = 'http://localhost:8000';
+    <script>
+        const API_URL = 'http://localhost:8000';
 
-    // ฟังก์ชันแสดงการแจ้งเตือน
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('statusToast');
-        toast.innerText = message;
-        toast.className = `status-toast toast-${type}`;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    }
-
-    function loadServices() {
-        fetch(`${API_URL}/services`)
-            .then(res => res.json())
-            .then(data => {
-                const select = document.getElementById('serviceSelect');
-                let options = '<option value="">-- เลือกบริการ --</option>';
-                options += data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
-                select.innerHTML = options;
-            });
-    }
-
-    function makeBooking() {
-        // รายชื่อ ID ที่ต้องตรวจสอบ
-        const inputIds = ['firstname', 'lastname', 'phone', 'serviceSelect', 'bookDate', 'bookTime'];
-        let isValid = true;
-
-        // ดึงค่าและเช็ค Validation (ขอบแดง)
-        const firstname = document.getElementById('firstname').value.trim();
-        const lastname = document.getElementById('lastname').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const service_id = document.getElementById('serviceSelect').value;
-        const booking_date = document.getElementById('bookDate').value;
-        const booking_time = document.getElementById('bookTime').value;
-
-        inputIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el.value) {
-                el.classList.add('is-invalid');
-                isValid = false;
-            } else {
-                el.classList.remove('is-invalid');
-            }
-        });
-
-        if (!isValid) {
-            showToast("กรุณากรอกข้อมูลให้ครบถ้วน", "error");
-            return;
+        function showToast(msg, type='success') {
+            const t = document.getElementById('statusToast');
+            t.innerText = msg;
+            t.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            t.style.display = 'block'; 
+            
+            setTimeout(() => {
+                t.style.display = 'none';
+                
+                // --- แก้ไข: ลบการ Redirect ออก และเพิ่มการล้างค่าฟอร์มถ้าจองสำเร็จ ---
+                if (type === 'success') {
+                    document.getElementById('firstname').value = '';
+                    document.getElementById('lastname').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('serviceSelect').value = '';
+                    document.getElementById('bookTime').value = '';
+                }
+            }, 2000);
         }
 
-        // จับคู่ตัวแปรให้ตรงกับ Backend (firstname, lastname, phone, service_id, booking_date, booking_time)
-        const bodyData = { firstname, lastname, phone, service_id, booking_date, booking_time };
+        function loadServices() {
+            fetch(`${API_URL}/services`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('serviceSelect').innerHTML = '<option value="">-- เลือกบริการ --</option>' + 
+                    data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
+                })
+                .catch(err => console.error("Error loading services:", err));
+        }
 
-        fetch(`${API_URL}/booking`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyData)
-        })
-        .then(async res => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "เกิดข้อผิดพลาด");
-            return data;
-        })
-        .then(data => {
-            showToast("จองคิวสำเร็จเรียบร้อยแล้ว!", "success");
-            // ล้างค่าข้อมูล
-            inputIds.forEach(id => document.getElementById(id).value = "");
-            // เซ็ตวันที่กลับเป็นวันนี้
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('bookDate').value = today;
-            loadBookings(); 
-        })
-        .catch(err => {
-            showToast(err.message, "error");
-        });
-    }
+        function makeBooking() {
+            const selectedDate = document.getElementById('bookDate').value;
+            const data = {
+                firstname: document.getElementById('firstname').value, 
+                lastname: document.getElementById('lastname').value,
+                phone: document.getElementById('phone').value, 
+                service_id: document.getElementById('serviceSelect').value,
+                booking_date: selectedDate, 
+                booking_time: document.getElementById('bookTime').value
+            };
 
-    function loadBookings() {
-        const filterDateValue = document.getElementById('filterDate').value;
-        if (!filterDateValue) return;
+            if(!data.firstname || !data.service_id || !data.booking_date || !data.booking_time) {
+                showToast("กรุณากรอกข้อมูลให้ครบถ้วน", "error");
+                return;
+            }
 
-        fetch(`${API_URL}/admin/bookings/${filterDateValue}`)
+            fetch(`${API_URL}/booking`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(data) 
+            })
             .then(res => res.json())
-            .then(data => {
-                const list = document.getElementById('bookingList');
-                if (!data || data.length === 0) {
-                    list.innerHTML = '<div class="text-center p-5 text-muted">ไม่มีนัดหมายในวันนี้</div>';
-                    return;
-                }
-                list.innerHTML = data.map(item => `
-                    <div class="col-xl-6">
-                        <div class="card booking-card">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h6 class="fw-bold"><i class="fa-solid fa-user me-2 icon-blue"></i>${item.fullname || 'ลูกค้า'}</h6>
-                                <span class="time"><i class="fa-regular fa-clock me-1"></i> ${item.booking_time} น.</span>
-                            </div>
-                            <div class="info-text mb-1">
-                                <i class="fa-solid fa-scissors icon-pink me-2"></i> ${item.service_name || 'ไม่ระบุบริการ'}
-                            </div>
-                            <div class="info-text mb-3">
-                                <i class="fa-solid fa-calendar-day icon-purple me-2"></i> ${filterDateValue}
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button onclick="cancelBooking(${item.id})" class="btn btn-outline-danger btn-sm w-100">ยกเลิก</button>
-                                <button onclick="rescheduleBooking(${item.id})" class="btn btn-outline-primary btn-sm w-100">เลื่อนนัด</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+            .then(d => { 
+                const isSuccess = d.message.includes('สำเร็จ');
+                showToast(d.message, isSuccess ? 'success' : 'error'); 
             })
             .catch(err => {
-                document.getElementById('bookingList').innerHTML = '<div class="text-center p-5 text-danger">ไม่สามารถดึงข้อมูลได้</div>';
-            });
-    }
-
-    function rescheduleBooking(id) {
-    const newDate = prompt("ระบุวันที่ใหม่ (YYYY-MM-DD):", document.getElementById('filterDate').value);
-    const newTime = prompt("ระบุเวลาใหม่ (HH:MM):");
-    
-    if (newDate && newTime) {
-        fetch(`${API_URL}/booking/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ new_date: newDate, new_time: newTime })
-        })
-        .then(async res => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message); // ดึง Error message มาโชว์
-            return data;
-        })
-        .then(() => {
-            showToast("เลื่อนนัดสำเร็จ", "success");
-            loadBookings();
-        })
-        .catch(err => {
-            showToast(err.message, "error"); // ถ้าซ้ำจะขึ้น Toast สีแดงแจ้งเตือน
-        });
-    }
-}
-
-    function cancelBooking(id) {
-        if (confirm('ยืนยันการยกเลิกนัดหมาย')) {
-            fetch(`${API_URL}/booking/${id}`, { method: 'DELETE' }).then(() => {
-                showToast("ยกเลิกนัดแล้ว", "error");
-                loadBookings();
+                showToast("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้", "error");
             });
         }
-    }
 
-    // เพิ่ม Event Listener ให้กับช่องวันที่
-document.getElementById('bookDate').addEventListener('change', checkAvailableTimes);
-
-async function checkAvailableTimes() {
-    const selectedDate = document.getElementById('bookDate').value;
-    const timeInput = document.getElementById('bookTime');
-    
-    if (!selectedDate) return;
-
-    try {
-        // ใช้ API ตัวเดียวกับที่ Admin ใช้ดึงคิวรายวัน
-        const res = await fetch(`${API_URL}/admin/bookings/${selectedDate}`);
-        const bookedData = await res.json();
-        
-        // ดึงเฉพาะเวลาที่ถูกจองแล้วออกมาเป็น Array เช่น ["10:00:00", "13:30:00"]
-        const bookedTimes = bookedData.map(item => {
-            // ตัดวินาทีออกถ้าจำเป็น เพื่อให้เทียบกับ input type="time" ได้ง่าย
-            return item.booking_time.substring(0, 5); 
-        });
-
-        // สร้างข้อความเตือน (ถ้ามีคนจองแล้ว)
-        if (bookedTimes.length > 0) {
-            console.log("เวลาที่ไม่ว่าง:", bookedTimes.join(", "));
-            // คุณสามารถนำ bookedTimes ไปแสดงเป็น List หรือ Alert บอกผู้ใช้ได้ที่นี่
-        }
-    } catch (err) {
-        console.error("ไม่สามารถตรวจสอบเวลาว่างได้", err);
-    }
-}
-
-    window.onload = () => {
-        loadServices();
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('filterDate').value = today;
-        document.getElementById('bookDate').value = today;
-        loadBookings();
-    };
-</script>
+        window.onload = () => { 
+            loadServices(); 
+            document.getElementById('bookDate').value = new Date().toISOString().split('T')[0]; 
+        };
+    </script>
 </body>
 </html>

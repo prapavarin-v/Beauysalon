@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางนัดหมาย | Premium Salon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+    <div id="statusToast" class="status-toast" style="display:none; position:fixed; top:20px; right:20px; padding:1rem; border-radius:12px; color:white; z-index:9999;"></div>
+
+    <nav class="navbar mb-4 shadow-sm">
+        <div class="container">
+            <span class="navbar-brand"><i class="fa-solid fa-crown me-2"></i> Premium Salon Admin</span>
+            <a href="index.html" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> จองคิวใหม่</a>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="card p-4 border-0 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color: var(--rose-gold-deep);">ตารางนัดหมายลูกค้า</h4>
+                    <p class="text-muted small mb-0">จัดการรายการนัดหมายและเวลาเข้าใช้บริการ</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small text-muted text-nowrap">เลือกวันที่:</span>
+                    <input type="date" id="filterDate" class="form-control w-auto" onchange="loadBookings()">
+                </div>
+            </div>
+            <hr class="opacity-10 mb-4">
+            <div id="bookingList" class="row g-4"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+
+        function showToast(msg, type='success') {
+            const t = document.getElementById('statusToast');
+            t.innerText = msg;
+            t.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            t.style.display = 'block'; 
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        function loadBookings() {
+            const date = document.getElementById('filterDate').value;
+            if(!date) return;
+            
+            fetch(`${API_URL}/admin/bookings/${date}`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('bookingList');
+                    if (!data.length) { 
+                        list.innerHTML = '<div class="col-12 text-center p-5 text-muted">ไม่มีรายการจองสำหรับวันนี้</div>'; 
+                        return; 
+                    }
+                    list.innerHTML = data.map(item => `
+                        <div class="col-lg-4 col-md-6">
+                            <div class="booking-card card p-3 shadow-sm border h-100">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h6 class="fw-bold mb-0">${item.fullname}</h6>
+                                    <span class="badge-rose px-2 py-1 rounded" style="background: #fff0f0; color: var(--rose-gold-deep); font-weight: bold; font-size: 0.9rem;">
+                                        ${item.booking_time.substring(0, 5)} น.
+                                    </span>
+                                </div>
+                                <div class="mb-3">
+                                    <p class="small text-muted mb-1"><i class="fa-solid fa-scissors me-2"></i>${item.service_name}</p>
+                                    <p class="small text-muted mb-0"><i class="fa-solid fa-phone me-2"></i>${item.phone || 'ไม่ระบุเบอร์'}</p>
+                                </div>
+                                <div class="d-flex gap-2 mt-auto">
+                                    <button onclick="cancelBooking(${item.id})" class="btn btn-outline-danger btn-sm w-100">ยกเลิก</button>
+                                    <button onclick="rescheduleBooking(${item.id})" class="btn btn-outline-primary btn-sm w-100">เลื่อนนัด</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast("โหลดข้อมูลล้มเหลว", "error");
+                });
+        }
+
+        function rescheduleBooking(id) {
+            const d = prompt("ระบุวันที่ใหม่ (ตัวอย่าง: 2026-03-19):", document.getElementById('filterDate').value);
+            const t = prompt("ระบุเวลาใหม่ (ตัวอย่าง: 14:30):");
+            if (d && t) {
+                fetch(`${API_URL}/booking/${id}`, { 
+                    method: 'PUT', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ new_date: d, new_time: t }) 
+                })
+                .then(res => res.json())
+                .then(data => { 
+                    showToast(data.message, data.message.includes('สำเร็จ') ? 'success' : 'error'); 
+                    loadBookings(); 
+                });
+            }
+        }
+
+        function cancelBooking(id) {
+            if (confirm('คุณแน่ใจหรือไม่ว่าต้องการ "ยกเลิก" รายการนัดหมายนี้?')) {
+                fetch(`${API_URL}/booking/${id}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => { 
+                    showToast("ยกเลิกรายการจองเรียบร้อยแล้ว", "success"); 
+                    loadBookings(); 
+                })
+                .catch(err => showToast("เกิดข้อผิดพลาดในการยกเลิก", "error"));
+            }
+        }
+
+        window.onload = () => { 
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateFromUrl = urlParams.get('date');
+            
+            if (dateFromUrl) {
+                document.getElementById('filterDate').value = dateFromUrl;
+            } else {
+                document.getElementById('filterDate').value = new Date().toISOString().split('T')[0]; 
+            }
+            
+            loadBookings(); 
+        };
+    </script>
+</body>
+</html>
