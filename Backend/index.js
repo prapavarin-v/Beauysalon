@@ -1,14 +1,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const app = express();
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const path = require('path'); // เพิ่มสำหรับการจัดการ path ไฟล์
+const app = express();
 const port = 8000;
 
 app.use(bodyParser.json());
 app.use(cors());
 
-// ตั้งค่าการเชื่อมต่อฐานข้อมูล (Port 8821 ตามที่ระบุใน Docker)
+// --- ส่วนที่แก้ไข: บอกให้ Express รู้จักโฟลเดอร์ Frontend ---
+// ชี้ไปที่โฟลเดอร์ Frontend ที่อยู่ระดับเดียวกับโฟลเดอร์ Backend
+app.use(express.static(path.join(__dirname, '../Frontend')));
+
+// ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
@@ -16,6 +21,21 @@ const db = mysql.createPool({
     database: 'beauty_salon_db',    
     port: 8821             
 });
+
+// --- ROUTES สำหรับเปิดหน้าเว็บ (เพิ่มใหม่) ---
+
+// หน้าแรก (หน้าจองคิว)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../Frontend/index.html'));
+});
+
+// หน้าตารางการจอง
+app.get('/schedule', (req, res) => {
+    res.sendFile(path.join(__dirname, '../Frontend/schedule.html'));
+});
+
+
+// --- API ENDPOINTS (โค้ดเดิมของคุณที่ปรับให้สมบูรณ์ขึ้น) ---
 
 // 1. ดึงรายการบริการ
 app.get('/services', async (req, res) => {
@@ -27,27 +47,31 @@ app.get('/services', async (req, res) => {
     }
 });
 
-// 2. จองคิวใหม่ (รวมโค้ดตรวจสอบค่าว่าง และแก้ไข Error บันทึกข้อมูล)
+// 2. จองคิวใหม่
 app.post('/booking', async (req, res) => {
     const { firstname, lastname, phone, service_id, booking_date, booking_time } = req.body;
     
-    // --- ส่วนตรวจสอบค่าว่างตามที่คุณต้องการ ---
     if (!firstname || !lastname || !phone || !service_id || !booking_date || !booking_time) {
         return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
     }
 
     try {
+        const [existingBooking] = await db.query(
+            'SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ?',
+            [booking_date, booking_time]
+        );
+
+        if (existingBooking.length > 0) {
+            return res.status(400).json({ message: 'ขออภัย เวลานี้มีผู้จองแล้ว กรุณาเลือกเวลาอื่น' });
+        }
+
         const fullname = `${firstname} ${lastname}`;
-        
-        // แก้ไข: บันทึกทั้ง firstname และ lastname ลงไปด้วย เพราะใน DB ของคุณตั้งค่าเป็น NOT NULL
-        // และเพิ่ม fullname เพื่อให้ระบบค้นหา/แสดงผลง่ายขึ้น
         const [userResult] = await db.query(
             'INSERT INTO users (firstname, lastname, fullname, phone) VALUES (?, ?, ?, ?)', 
             [firstname, lastname, fullname, phone]
         );
         const user_id = userResult.insertId;
 
-        // บันทึกการจอง
         await db.query(
             'INSERT INTO bookings (user_id, service_id, booking_date, booking_time) VALUES (?, ?, ?, ?)',
             [user_id, service_id, booking_date, booking_time]
@@ -93,11 +117,26 @@ app.delete('/booking/:id', async (req, res) => {
 app.put('/booking/:id', async (req, res) => {
     const { id } = req.params;
     const { new_date, new_time } = req.body;
+
     try {
-        await db.query(
+        const [existing] = await db.query(
+            'SELECT id FROM bookings WHERE booking_date = ? AND booking_time = ? AND id != ?',
+            [new_date, new_time, id]
+        );
+
+        if (existing.length > 0) {
+            return res.status(400).json({ message: 'เวลานี้มีผู้จองแล้ว ไม่สามารถเลื่อนไปเวลานี้ได้' });
+        }
+
+        const [result] = await db.query(
             'UPDATE bookings SET booking_date = ?, booking_time = ? WHERE id = ?',
             [new_date, new_time, id] 
         );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'ไม่พบข้อมูลนัดหมายที่ต้องการแก้ไข' });
+        }
+
         res.json({ message: 'เลื่อนนัดหมายสำเร็จ' });
     } catch (err) {
         res.status(500).json({ message: 'Error: ' + err.message });
@@ -106,4 +145,6 @@ app.put('/booking/:id', async (req, res) => {
 
 app.listen(port, () => {
     console.log(`🚀 Server is running at http://localhost:${port}`);
+    console.log(`🔗 Booking Page: http://localhost:${port}/`);
+    console.log(`🔗 Schedule Page: http://localhost:${port}/schedule`);
 });
