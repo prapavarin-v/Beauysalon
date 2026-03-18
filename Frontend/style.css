@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* --- การตั้งค่าสีและฟอนต์แบบ Rose Gold Premium Salon --- */
+:root {
+    --bg-soft: #fdfaf9;
+    --card-bg: #ffffff;
+
+    /* Palette ร้านเสริมสวย */
+    --blush-mist: #fdf2f8;
+    --rose-gold-light: #f4d7d3;
+    --rose-gold-main: #e7ac9a;
+    --rose-gold-deep: #b76e79;
+    --champagne: #fdf5e6;
+
+    /* Gradient หรูหราแบบเมทัลลิก */
+    --primary-gradient: linear-gradient(135deg, #e7ac9a 0%, #b76e79 100%);
+    --soft-gradient: linear-gradient(135deg, #fdf2f8 0%, #f4d7d3 100%);
+
+    --text-main: #4a3f3f;
+    --text-muted: #8e7f7f;
+
+    --shadow-soft: 0 10px 30px rgba(183, 110, 121, 0.08);
+    --transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+body {
+    background-color: var(--bg-soft);
+    font-family: 'DM Sans', 'Prompt', sans-serif;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* --- แถบเมนู (Navbar) --- */
+.navbar {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(183, 110, 121, 0.1);
+    padding: 1.2rem 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.navbar-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 2.2rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+    text-shadow: none;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+/* --- การ์ด (Cards) --- */
+.card {
+    border-radius: 20px;
+    border: 1px solid rgba(183, 110, 121, 0.05);
+    box-shadow: var(--shadow-soft);
+    background: var(--card-bg);
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 35px rgba(183, 110, 121, 0.12);
+}
+
+/* --- ฟอร์ม (Form Inputs) --- */
+.form-label {
+    color: var(--rose-gold-deep);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    border: 1.5px solid #f1eceb;
+    background-color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--rose-gold-main);
+    box-shadow: 0 0 0 4px rgba(231, 172, 154, 0.15);
+}
+
+/* --- ปุ่ม (Buttons) --- */
+.btn {
+    border-radius: 50px;
+    padding: 0.7rem 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    font-family: 'DM Sans', 'Prompt', sans-serif;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    border: none;
+    box-shadow: 0 6px 20px rgba(183, 110, 121, 0.25);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #b76e79 0%, #e7ac9a 100%);
+    box-shadow: 0 8px 25px rgba(183, 110, 121, 0.35);
+}
+
+/* --- การ์ดนัดหมาย (Appointment Cards) --- */
+.booking-card {
+    border-radius: 18px !important;
+    background: #ffffff;
+    border: 1px solid rgba(183, 110, 121, 0.08) !important;
+}
+
+.booking-card::before {
+    background: var(--primary-gradient);
+    width: 5px;
+}
+
+.booking-card .time {
+    color: var(--rose-gold-deep) !important;
+    font-size: 1.1rem;
+}
+/* --- สไตล์สำหรับเวลาที่ถูกจองไปแล้ว --- */
+.time-slot-disabled {
+    background-color: #f3f4f6 !important;
+    color: #9ca3af !important;
+    border-color: #e5e7eb !important;
+    cursor: not-allowed !important;
+    opacity: 0.6;
+    position: relative;
+}
+
+.time-slot-disabled::after {
+    content: " (เต็ม)";
+    font-size: 0.7rem;
+    color: #ef4444;
+}
+
+/* ปรับแต่งช่อง Input เมื่อถูกปิดใช้งาน */
+input:disabled, select:disabled {
+    background-color: #f9fafb !important;
+    border-color: #eee !important;
+    color: #ccc !important;
+}
+
+/* ไอคอนสี Rose Gold */
+.icon-pink,
+.icon-purple,
+.icon-blue {
+    color: var(--rose-gold-main);
+}
+
+/* ปุ่ม Outline */
+.btn-outline-danger {
+    border-color: #fce7e7;
+    color: #d66b6b;
+    background: transparent;
+}
+
+.btn-outline-primary {
+    border-color: var(--rose-gold-light);
+    color: var(--rose-gold-deep);
+    background: var(--champagne);
+}
+
+.btn-outline-primary:hover {
+    background: var(--rose-gold-main);
+    border-color: var(--rose-gold-main);
+    color: #fff;
+}
+
+/* --- Hero / Header Section --- */
+.hero,
+.page-header,
+.section-hero {
+    background: var(--soft-gradient);
+}
+
+/* --- Section พื้นหลัง Blush Mist --- */
+.bg-blush {
+    background-color: var(--blush-mist);
+}
+
+/* --- Badge / Tag --- */
+.badge-rose {
+    background: var(--blush-mist);
+    color: var(--rose-gold-deep);
+    border: 1px solid var(--rose-gold-light);
+    border-radius: 50px;
+    padding: 4px 14px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
