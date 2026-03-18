@@ -2,15 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
-const path = require('path'); // เพิ่มสำหรับการจัดการ path ไฟล์
+const path = require('path');
 const app = express();
 const port = 8000;
 
 app.use(bodyParser.json());
 app.use(cors());
 
-// --- ส่วนที่แก้ไข: บอกให้ Express รู้จักโฟลเดอร์ Frontend ---
-// ชี้ไปที่โฟลเดอร์ Frontend ที่อยู่ระดับเดียวกับโฟลเดอร์ Backend
+// --- จัดการไฟล์ Static (Frontend) ---
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
 // ตั้งค่าการเชื่อมต่อฐานข้อมูล
@@ -22,20 +21,18 @@ const db = mysql.createPool({
     port: 8821             
 });
 
-// --- ROUTES สำหรับเปิดหน้าเว็บ (เพิ่มใหม่) ---
+// --- ROUTES สำหรับเปิดหน้าเว็บ ---
 
-// หน้าแรก (หน้าจองคิว)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/index.html'));
 });
 
-// หน้าตารางการจอง
 app.get('/schedule', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/schedule.html'));
 });
 
 
-// --- API ENDPOINTS (โค้ดเดิมของคุณที่ปรับให้สมบูรณ์ขึ้น) ---
+// --- API ENDPOINTS ---
 
 // 1. ดึงรายการบริการ
 app.get('/services', async (req, res) => {
@@ -84,12 +81,12 @@ app.post('/booking', async (req, res) => {
     }
 });
 
-// 3. ดึงนัดหมายรายวัน
+// 3. ดึงนัดหมายรายวัน (แก้ไข: เพิ่ม u.phone เพื่อให้หน้าบ้านดึงไปโชว์ได้)
 app.get('/admin/bookings/:date', async (req, res) => {
     const { date } = req.params;
     try {
         const [rows] = await db.query(
-            `SELECT b.id, b.booking_time, u.fullname, s.service_name 
+            `SELECT b.id, b.booking_time, u.fullname, u.phone, s.service_name 
              FROM bookings b 
              JOIN users u ON b.user_id = u.id 
              JOIN services s ON b.service_id = s.id 
