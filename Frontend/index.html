@@ -3,68 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salon Booking System</title>
+    <title>Salon Booking | Pastel Premium</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { background-color: #fdf2f8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar { background-color: #db2777 !important; }
-        .card { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .btn-primary { background-color: #db2777; border: none; }
-        .btn-primary:hover { background-color: #be185d; }
-        .border-info { border-left: 5px solid #db2777 !important; } /* เปลี่ยนสีขอบให้เข้าธีมชมพู */
+        /* CSS เพิ่มเติมสำหรับระบบ Validation */
+        .is-invalid { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        
+        .status-toast {
+            position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem;
+            border-radius: 16px; color: white; font-weight: 600; z-index: 9999;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        .toast-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .toast-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark mb-4">
+<div id="statusToast" class="status-toast"></div>
+
+<nav class="navbar navbar-light sticky-top mb-5">
     <div class="container">
-        <span class="navbar-brand mb-0 h1">💅 BeautySalon Booking</span>
+        <span class="navbar-brand">
+            <i class="fa-solid fa-crown me-3"></i> Beauty Salon
+        </span>
     </div>
 </nav>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card p-4">
-                <h4 class="mb-3">จองคิวใหม่</h4>
-                <div class="mb-3">
-                    <label class="form-label">ชื่อ</label>
-                    <input type="text" id="firstname" class="form-control" placeholder="กรอกชื่อ">
+<div class="container pb-5">
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h4 class="mb-4"><i class="fa-solid fa-calendar-plus me-2 icon-pink"></i>จองคิวใหม่</h4>
+                    <div class="mb-3">
+                        <label class="form-label">ชื่อ</label>
+                        <input type="text" id="firstname" class="form-control" placeholder="กรอกชื่อ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">นามสกุล</label>
+                        <input type="text" id="lastname" class="form-control" placeholder="กรอกนามสกุล">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">เบอร์โทรศัพท์</label>
+                        <input type="text" id="phone" class="form-control" placeholder="08x-xxxxxxx">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">เลือกบริการ</label>
+                        <select id="serviceSelect" class="form-select">
+                            <option value="">-- เลือกบริการ --</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">วันที่</label>
+                            <input type="date" id="bookDate" class="form-control">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">เวลา</label>
+                            <input type="time" id="bookTime" class="form-control">
+                        </div>
+                    </div>
+                    <button onclick="makeBooking()" class="btn btn-primary w-100 mt-2">ยืนยันการจอง</button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">นามสกุล</label>
-                    <input type="text" id="lastname" class="form-control" placeholder="กรอกนามสกุล">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">เบอร์โทรศัพท์</label>
-                    <input type="text" id="phone" class="form-control" placeholder="08x-xxxxxxx">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">เลือกบริการ</label>
-                    <select id="serviceSelect" class="form-select">
-                        <option value="">-- เลือกบริการ --</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">วันที่</label>
-                    <input type="date" id="bookDate" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">เวลา</label>
-                    <input type="time" id="bookTime" class="form-control">
-                </div>
-                <button onclick="makeBooking()" class="btn btn-primary w-100">ยืนยันการจอง</button>
             </div>
         </div>
 
-        <div class="col-md-8">
-            <div class="card p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4>ตารางนัดหมายรายวัน</h4>
-                    <input type="date" id="filterDate" class="form-control w-50" onchange="loadBookings()">
-                </div>
-                <div id="bookingList" class="row">
+        <div class="col-lg-8 col-md-7">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">ตารางนัดหมายรายวัน</h4>
+                        <input type="date" id="filterDate" class="form-control w-50" onchange="loadBookings()">
                     </div>
+                    <div id="bookingList" class="row g-3"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -73,7 +91,15 @@
 <script>
     const API_URL = 'http://localhost:8000';
 
-    // 1. โหลดรายการบริการจาก DB
+    // ฟังก์ชันแสดงการแจ้งเตือน
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('statusToast');
+        toast.innerText = message;
+        toast.className = `status-toast toast-${type}`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
     function loadServices() {
         fetch(`${API_URL}/services`)
             .then(res => res.json())
@@ -82,62 +108,89 @@
                 let options = '<option value="">-- เลือกบริการ --</option>';
                 options += data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
                 select.innerHTML = options;
-            })
-            .catch(err => console.error("Error loading services:", err));
+            });
     }
 
-    // 2. ฟังก์ชันจองคิว
     function makeBooking() {
+        // รายชื่อ ID ที่ต้องตรวจสอบ
+        const inputIds = ['firstname', 'lastname', 'phone', 'serviceSelect', 'bookDate', 'bookTime'];
+        let isValid = true;
+
+        // ดึงค่าและเช็ค Validation (ขอบแดง)
         const firstname = document.getElementById('firstname').value.trim();
         const lastname = document.getElementById('lastname').value.trim();
         const phone = document.getElementById('phone').value.trim();
-        const serviceId = document.getElementById('serviceSelect').value;
-        const date = document.getElementById('bookDate').value;
-        const time = document.getElementById('bookTime').value;
+        const service_id = document.getElementById('serviceSelect').value;
+        const booking_date = document.getElementById('bookDate').value;
+        const booking_time = document.getElementById('bookTime').value;
 
-        if (!firstname || !lastname || !phone || !serviceId || !date || !time) {
-            alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+        inputIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el.value) {
+                el.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                el.classList.remove('is-invalid');
+            }
+        });
+
+        if (!isValid) {
+            showToast("กรุณากรอกข้อมูลให้ครบถ้วน", "error");
             return;
         }
 
-        const bodyData = { firstname, lastname, phone, service_id: serviceId, booking_date: date, booking_time: time };
+        // จับคู่ตัวแปรให้ตรงกับ Backend (firstname, lastname, phone, service_id, booking_date, booking_time)
+        const bodyData = { firstname, lastname, phone, service_id, booking_date, booking_time };
 
         fetch(`${API_URL}/booking`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(bodyData)
         })
-        .then(res => res.json())
+        .then(async res => {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "เกิดข้อผิดพลาด");
+            return data;
+        })
         .then(data => {
-            alert(data.message || "จองสำเร็จ!");
-            // ล้างข้อมูลหลังจอง
-            document.getElementById('firstname').value = "";
-            document.getElementById('lastname').value = "";
-            document.getElementById('phone').value = "";
+            showToast("จองคิวสำเร็จเรียบร้อยแล้ว!", "success");
+            // ล้างค่าข้อมูล
+            inputIds.forEach(id => document.getElementById(id).value = "");
+            // เซ็ตวันที่กลับเป็นวันนี้
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookDate').value = today;
             loadBookings(); 
         })
-        .catch(err => alert("เกิดข้อผิดพลาดในการบันทึก"));
+        .catch(err => {
+            showToast(err.message, "error");
+        });
     }
 
-    // 3. แสดงรายการนัดหมาย
     function loadBookings() {
-        const date = document.getElementById('filterDate').value;
-        if (!date) return;
+        const filterDateValue = document.getElementById('filterDate').value;
+        if (!filterDateValue) return;
 
-        fetch(`${API_URL}/admin/bookings/${date}`)
+        fetch(`${API_URL}/admin/bookings/${filterDateValue}`)
             .then(res => res.json())
             .then(data => {
                 const list = document.getElementById('bookingList');
-                if (!data.length) {
-                    list.innerHTML = '<p class="text-center text-muted">ไม่มีนัดหมายในวันนี้</p>';
+                if (!data || data.length === 0) {
+                    list.innerHTML = '<div class="text-center p-5 text-muted">ไม่มีนัดหมายในวันนี้</div>';
                     return;
                 }
                 list.innerHTML = data.map(item => `
-                    <div class="col-md-6 mb-3">
-                        <div class="card p-3 border-start border-info border-5">
-                            <h6>👤 ${item.fullname}</h6>
-                            <p class="mb-1 text-muted">💇 ${item.service_name}</p>
-                            <p class="mb-2 text-primary">⏰ ${item.booking_time} น.</p>
+                    <div class="col-xl-6">
+                        <div class="card booking-card">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="fw-bold"><i class="fa-solid fa-user me-2 icon-blue"></i>${item.fullname || 'ลูกค้า'}</h6>
+                                <span class="time"><i class="fa-regular fa-clock me-1"></i> ${item.booking_time} น.</span>
+                            </div>
+                            <div class="info-text mb-1">
+                                <i class="fa-solid fa-scissors icon-pink me-2"></i> ${item.service_name || 'ไม่ระบุบริการ'}
+                            </div>
+                            <div class="info-text mb-3">
+                                <i class="fa-solid fa-calendar-day icon-purple me-2"></i> ${filterDateValue}
+                            </div>
                             <div class="d-flex gap-2">
                                 <button onclick="cancelBooking(${item.id})" class="btn btn-outline-danger btn-sm w-100">ยกเลิก</button>
                                 <button onclick="rescheduleBooking(${item.id})" class="btn btn-outline-primary btn-sm w-100">เลื่อนนัด</button>
@@ -145,46 +198,43 @@
                         </div>
                     </div>
                 `).join('');
+            })
+            .catch(err => {
+                document.getElementById('bookingList').innerHTML = '<div class="text-center p-5 text-danger">ไม่สามารถดึงข้อมูลได้</div>';
             });
     }
 
-    // 4. ฟังก์ชันเลื่อนนัด
     function rescheduleBooking(id) {
-        const newDate = prompt("ระบุวันที่ใหม่ (รูปแบบ YYYY-MM-DD):", document.getElementById('filterDate').value);
-        const newTime = prompt("ระบุเวลาใหม่ (รูปแบบ HH:MM):");
-        
+        const newDate = prompt("ระบุวันที่ใหม่ (YYYY-MM-DD):", document.getElementById('filterDate').value);
+        const newTime = prompt("ระบุเวลาใหม่ (HH:MM):");
         if (newDate && newTime) {
             fetch(`${API_URL}/booking/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ new_date: newDate, new_time: newTime })
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message || "เลื่อนนัดสำเร็จ");
+            }).then(() => {
+                showToast("เลื่อนนัดสำเร็จ");
                 loadBookings();
             });
         }
     }
 
-    // 5. ยกเลิกนัด
     function cancelBooking(id) {
-        if (confirm('ยืนยันการลบนัดหมายนี้?')) {
-            fetch(`${API_URL}/booking/${id}`, { method: 'DELETE' })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.message || "ลบสำเร็จ");
-                    loadBookings();
-                });
+        if (confirm('ยืนยันการยกเลิกนัดหมาย')) {
+            fetch(`${API_URL}/booking/${id}`, { method: 'DELETE' }).then(() => {
+                showToast("ยกเลิกนัดแล้ว", "error");
+                loadBookings();
+            });
         }
     }
 
     window.onload = () => {
         loadServices();
-        document.getElementById('filterDate').valueAsDate = new Date();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('filterDate').value = today;
+        document.getElementById('bookDate').value = today;
         loadBookings();
     };
 </script>
-
 </body>
 </html>
