@@ -40,18 +40,22 @@
     <script>
         const API_URL = 'http://localhost:8000';
 
-        function showToast(msg, type='success', targetDate = null) {
+        function showToast(msg, type='success') {
             const t = document.getElementById('statusToast');
             t.innerText = msg;
             t.style.background = type === 'success' ? '#10b981' : '#ef4444';
             t.style.display = 'block'; 
+            
             setTimeout(() => {
                 t.style.display = 'none';
-                // ถ้าจองสำเร็จ ให้เด้งไปหน้าตารางคิว พร้อมระบุวันที่จอง
-                if(type === 'success' && targetDate) {
-                    window.location.href = `schedule.html?date=${targetDate}`;
-                } else if (msg.includes('สำเร็จ')) {
-                    window.location.href = 'schedule.html';
+                
+                // --- แก้ไข: ลบการ Redirect ออก และเพิ่มการล้างค่าฟอร์มถ้าจองสำเร็จ ---
+                if (type === 'success') {
+                    document.getElementById('firstname').value = '';
+                    document.getElementById('lastname').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('serviceSelect').value = '';
+                    document.getElementById('bookTime').value = '';
                 }
             }, 2000);
         }
@@ -90,7 +94,7 @@
             .then(res => res.json())
             .then(d => { 
                 const isSuccess = d.message.includes('สำเร็จ');
-                showToast(d.message, isSuccess ? 'success' : 'error', isSuccess ? selectedDate : null); 
+                showToast(d.message, isSuccess ? 'success' : 'error'); 
             })
             .catch(err => {
                 showToast("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้", "error");
