@@ -11,9 +11,37 @@
 <body class="bg-light">
     <div id="statusToast" class="status-toast" style="display:none; position:fixed; top:20px; right:20px; padding:1rem; border-radius:12px; color:white; z-index:9999;"></div>
 
+    <!-- Modal เลื่อนนัด -->
+    <div class="modal fade" id="rescheduleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-calendar-pen me-2"></i>เลื่อนนัดหมาย</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted">วันที่ใหม่</label>
+                        <input type="date" id="newDate" class="form-control" onchange="buildTimeOptions()">
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label small fw-semibold text-muted">เวลาใหม่ (10:00 – 20:00 น.)</label>
+                        <select id="newTime" class="form-select"></select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4" onclick="confirmReschedule()">
+                        <i class="fa-solid fa-check me-1"></i>ยืนยันเลื่อนนัด
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <nav class="navbar mb-4 shadow-sm">
         <div class="container">
-            <span class="navbar-brand"><i class="fa-solid fa-crown me-2"></i> Premium Salon Admin</span>
+            <span class="navbar-brand"><i class="fa-solid fa-crown me-2"></i> Premium Salon </span>
             <a href="index.html" class="btn btn-outline-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> จองคิวใหม่</a>
         </div>
     </nav>
@@ -35,8 +63,48 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_URL = 'http://localhost:8000';
+        let currentRescheduleId = null;
+        let rescheduleModal = null;
+
+        // สร้าง dropdown เวลาทุก 30 นาที ระหว่าง 10:00 - 20:00
+        function buildTimeOptions() {
+            const select = document.getElementById('newTime');
+            const selectedDate = document.getElementById('newDate').value;
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            select.innerHTML = '';
+            let hasOption = false;
+
+            for (let h = 10; h <= 20; h++) {
+                const minutes = h === 20 ? [0] : [0, 30];
+                minutes.forEach(m => {
+                    const slotMinutes = h * 60 + m;
+
+                    // ถ้าวันนี้ ตัดเวลาที่ผ่านมาแล้วออก
+                    if (selectedDate === todayStr && slotMinutes <= currentMinutes) return;
+
+                    const hh = String(h).padStart(2, '0');
+                    const mm = String(m).padStart(2, '0');
+                    const option = document.createElement('option');
+                    option.value = `${hh}:${mm}`;
+                    option.textContent = `${hh}:${mm} น.`;
+                    select.appendChild(option);
+                    hasOption = true;
+                });
+            }
+
+            if (!hasOption) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'ไม่มีเวลาว่างสำหรับวันนี้';
+                select.appendChild(option);
+            }
+        }
 
         function showToast(msg, type='success') {
             const t = document.getElementById('statusToast');
@@ -86,20 +154,33 @@
         }
 
         function rescheduleBooking(id) {
-            const d = prompt("ระบุวันที่ใหม่ (ตัวอย่าง: 2026-03-19):", document.getElementById('filterDate').value);
-            const t = prompt("ระบุเวลาใหม่ (ตัวอย่าง: 14:30):");
-            if (d && t) {
-                fetch(`${API_URL}/booking/${id}`, { 
-                    method: 'PUT', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ new_date: d, new_time: t }) 
-                })
-                .then(res => res.json())
-                .then(data => { 
-                    showToast(data.message, data.message.includes('สำเร็จ') ? 'success' : 'error'); 
-                    loadBookings(); 
-                });
+            currentRescheduleId = id;
+            document.getElementById('newDate').value = document.getElementById('filterDate').value;
+            buildTimeOptions();
+            rescheduleModal.show();
+        }
+
+        function confirmReschedule() {
+            const d = document.getElementById('newDate').value;
+            const t = document.getElementById('newTime').value;
+
+            if (!d || !t) {
+                showToast("กรุณาระบุวันที่และเวลาให้ครบ", "error");
+                return;
             }
+
+            fetch(`${API_URL}/booking/${currentRescheduleId}`, { 
+                method: 'PUT', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ new_date: d, new_time: t }) 
+            })
+            .then(res => res.json())
+            .then(data => { 
+                rescheduleModal.hide();
+                showToast(data.message, data.message.includes('สำเร็จ') ? 'success' : 'error'); 
+                loadBookings(); 
+            })
+            .catch(() => showToast("เกิดข้อผิดพลาดในการเลื่อนนัด", "error"));
         }
 
         function cancelBooking(id) {
@@ -114,7 +195,9 @@
             }
         }
 
-        window.onload = () => { 
+        window.onload = () => {
+            rescheduleModal = new bootstrap.Modal(document.getElementById('rescheduleModal'));
+
             const urlParams = new URLSearchParams(window.location.search);
             const dateFromUrl = urlParams.get('date');
             

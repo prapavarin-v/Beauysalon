@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="statusToast" class="status-toast" style="display:none; position:fixed; top:20px; right:20px; padding:1rem; border-radius:12px; color:white; z-index:9999;"></div>
+    <div id="statusToast" class="status-toast" style="display:none; position:fixed; top:20px; right:20px; padding:1.2rem; border-radius:15px; color:white;"></div>
 
     <nav class="navbar mb-5 shadow-sm">
         <div class="container justify-content-center">
@@ -22,16 +22,43 @@
             <div class="col-lg-5 col-md-8">
                 <div class="card p-4 shadow-lg border-0">
                     <h4 class="mb-4 fw-bold text-center" style="color: var(--rose-gold-deep);"><i class="fa-solid fa-calendar-plus me-2"></i>จองคิวใช้บริการ</h4>
+                    
                     <div class="row g-3">
-                        <div class="col-6"><label class="form-label">ชื่อ</label><input type="text" id="firstname" class="form-control" placeholder="ชื่อ"></div>
-                        <div class="col-6"><label class="form-label">นามสกุล</label><input type="text" id="lastname" class="form-control" placeholder="นามสกุล"></div>
-                        <div class="col-12"><label class="form-label">เบอร์โทรศัพท์</label><input type="text" id="phone" class="form-control" placeholder="08x-xxxxxxx"></div>
-                        <div class="col-12"><label class="form-label">บริการที่ต้องการ</label><select id="serviceSelect" class="form-select"></select></div>
-                        <div class="col-6"><label class="form-label">วันที่</label><input type="date" id="bookDate" class="form-control"></div>
-                        <div class="col-6"><label class="form-label">เวลา</label><input type="time" id="bookTime" class="form-control"></div>
+                        <div class="col-6">
+                            <label class="form-label small">ชื่อ</label>
+                            <input type="text" id="firstname" class="form-control" placeholder="ชื่อ">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">นามสกุล</label>
+                            <input type="text" id="lastname" class="form-control" placeholder="นามสกุล">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">เบอร์โทรศัพท์</label>
+                            <input type="text" id="phone" class="form-control" placeholder="08xxxxxxxx" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small">บริการที่ต้องการ</label>
+                            <select id="serviceSelect" class="form-select">
+                                <option value="">-- เลือกบริการ --</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">วันที่</label>
+                            <input type="date" id="bookDate" class="form-control" onchange="buildTimeOptions()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small">เวลา (10:00 – 20:00 น.)</label>
+                            <select id="bookTime" class="form-select">
+                                <!-- สร้างจาก buildTimeOptions() -->
+                            </select>
+                        </div>
                     </div>
-                    <button onclick="makeBooking()" class="btn btn-primary w-100 mt-4 py-3 fw-bold">ยืนยันการจองคิว</button>
-                    <div class="text-center mt-3"><a href="schedule.html" class="text-muted small text-decoration-none"><i class="fa-solid fa-list me-1"></i> ดูตารางคิวจอง</a></div>
+
+                    <button onclick="submitBooking()" class="btn btn-primary w-100 mt-4 py-3 fw-bold">ยืนยันการจองคิว</button>
+                    
+                    <div class="text-center mt-3">
+                        <a href="schedule.html" class="text-muted small text-decoration-none"><i class="fa-solid fa-list me-1"></i> ดูตารางคิวจอง</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -40,70 +67,157 @@
     <script>
         const API_URL = 'http://localhost:8000';
 
-        function showToast(msg, type='success') {
-            const t = document.getElementById('statusToast');
-            t.innerText = msg;
-            t.style.background = type === 'success' ? '#10b981' : '#ef4444';
-            t.style.display = 'block'; 
-            
-            setTimeout(() => {
-                t.style.display = 'none';
-                
-                // --- แก้ไข: ลบการ Redirect ออก และเพิ่มการล้างค่าฟอร์มถ้าจองสำเร็จ ---
-                if (type === 'success') {
-                    document.getElementById('firstname').value = '';
-                    document.getElementById('lastname').value = '';
-                    document.getElementById('phone').value = '';
-                    document.getElementById('serviceSelect').value = '';
-                    document.getElementById('bookTime').value = '';
-                }
-            }, 2000);
+        // สร้าง dropdown เวลาทุก 30 นาที ระหว่าง 10:00 - 20:00
+        // กรองเวลาที่ผ่านมาแล้วออก ถ้าเลือกวันนี้
+        function buildTimeOptions() {
+            const select = document.getElementById('bookTime');
+            const selectedDate = document.getElementById('bookDate').value;
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            select.innerHTML = '';
+            let hasOption = false;
+
+            for (let h = 10; h <= 20; h++) {
+                const minutes = h === 20 ? [0] : [0, 30];
+                minutes.forEach(m => {
+                    const slotMinutes = h * 60 + m;
+
+                    // ถ้าวันนี้ ตัดเวลาที่ผ่านมาแล้วออก
+                    if (selectedDate === todayStr && slotMinutes <= currentMinutes) return;
+
+                    const hh = String(h).padStart(2, '0');
+                    const mm = String(m).padStart(2, '0');
+                    const option = document.createElement('option');
+                    option.value = `${hh}:${mm}`;
+                    option.textContent = `${hh}:${mm} น.`;
+                    select.appendChild(option);
+                    hasOption = true;
+                });
+            }
+
+            if (!hasOption) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'ไม่มีเวลาว่างสำหรับวันนี้';
+                select.appendChild(option);
+            }
         }
 
         function loadServices() {
             fetch(`${API_URL}/services`)
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('serviceSelect').innerHTML = '<option value="">-- เลือกบริการ --</option>' + 
-                    data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
+                    const select = document.getElementById('serviceSelect');
+                    let options = '<option value="">-- เลือกบริการ --</option>';
+                    options += data.map(s => `<option value="${s.id}">${s.service_name} (${s.price}.-)</option>`).join('');
+                    select.innerHTML = options;
                 })
                 .catch(err => console.error("Error loading services:", err));
         }
 
-        function makeBooking() {
-            const selectedDate = document.getElementById('bookDate').value;
-            const data = {
-                firstname: document.getElementById('firstname').value, 
-                lastname: document.getElementById('lastname').value,
-                phone: document.getElementById('phone').value, 
-                service_id: document.getElementById('serviceSelect').value,
-                booking_date: selectedDate, 
-                booking_time: document.getElementById('bookTime').value
-            };
+        const validateBookingData = (bookingData) => {
+            let errors = [];
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            const currentTimeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
 
-            if(!data.firstname || !data.service_id || !data.booking_date || !data.booking_time) {
-                showToast("กรุณากรอกข้อมูลให้ครบถ้วน", "error");
-                return;
+            if (!bookingData.firstname) errors.push("กรุณากรอกชื่อ");
+            if (!bookingData.lastname) errors.push("กรุณากรอกนามสกุล");
+
+            const phonePattern = /^[0-9]{10}$/;
+            if (!bookingData.phone) {
+                errors.push("กรุณากรอกเบอร์โทรศัพท์");
+            } else if (!phonePattern.test(bookingData.phone)) {
+                errors.push("กรุณากรอกเบอร์โทรศัพท์ให้ครบ 10 หลัก");
             }
 
-            fetch(`${API_URL}/booking`, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify(data) 
-            })
-            .then(res => res.json())
-            .then(d => { 
-                const isSuccess = d.message.includes('สำเร็จ');
-                showToast(d.message, isSuccess ? 'success' : 'error'); 
-            })
-            .catch(err => {
-                showToast("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้", "error");
-            });
+            if (!bookingData.service_id) errors.push("กรุณาเลือกบริการ");
+
+            if (!bookingData.booking_date) {
+                errors.push("กรุณาเลือกวันที่");
+            } else if (bookingData.booking_date < todayStr) {
+                errors.push("ไม่สามารถเลือกวันที่ย้อนหลังได้");
+            }
+
+            if (!bookingData.booking_time) {
+                errors.push("กรุณาเลือกเวลา");
+            } else {
+                if (bookingData.booking_date === todayStr && bookingData.booking_time < currentTimeStr) {
+                    errors.push("เวลานี้ผ่านมาแล้ว");
+                }
+            }
+
+            return errors;
+        }
+
+        const submitBooking = async () => {
+            const statusToast = document.getElementById('statusToast');
+            
+            try {
+                const bookingData = {
+                    firstname: document.getElementById('firstname').value.trim(),
+                    lastname: document.getElementById('lastname').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    service_id: document.getElementById('serviceSelect').value,
+                    booking_date: document.getElementById('bookDate').value,
+                    booking_time: document.getElementById('bookTime').value
+                };
+
+                const errors = validateBookingData(bookingData);
+
+                if (errors.length > 0) {
+                    throw { message: "กรุณาตรวจสอบข้อมูล:", errors: errors };
+                }
+
+                const response = await fetch(`${API_URL}/booking`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(bookingData) 
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusToast.innerHTML = `<b><i class="fa-solid fa-circle-check me-2"></i>${result.message}</b>`;
+                    statusToast.style.background = '#10b981'; 
+                    statusToast.style.display = 'block';
+
+                    document.getElementById('firstname').value = '';
+                    document.getElementById('lastname').value = '';
+                    document.getElementById('phone').value = '';
+                    document.getElementById('serviceSelect').value = '';
+                    buildTimeOptions(); // รีเซ็ต dropdown เวลา
+                } else {
+                    throw { message: result.message, errors: [] };
+                }
+
+            } catch (error) {
+                let htmlData = '<div>';
+                htmlData += `<b><i class="fa-solid fa-circle-exclamation me-2"></i>${error.message}</b>`;
+                
+                if (error.errors && error.errors.length > 0) {
+                    htmlData += '<ul class="error-list">';
+                    for (let i = 0; i < error.errors.length; i++) {
+                        htmlData += `<li>- ${error.errors[i]}</li>`;
+                    }
+                    htmlData += '</ul>';
+                }
+                htmlData += '</div>';
+
+                statusToast.innerHTML = htmlData; 
+                statusToast.style.background = '#ef4444'; 
+                statusToast.style.display = 'block';
+            }
+
+            setTimeout(() => { statusToast.style.display = 'none'; }, 5000);
         }
 
         window.onload = () => { 
-            loadServices(); 
-            document.getElementById('bookDate').value = new Date().toISOString().split('T')[0]; 
+            loadServices();
+            document.getElementById('bookDate').value = new Date().toISOString().split('T')[0];
+            buildTimeOptions(); // สร้าง dropdown เวลาตอนโหลดหน้า
         };
     </script>
 </body>

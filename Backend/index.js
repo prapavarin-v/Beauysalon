@@ -12,7 +12,6 @@ app.use(cors());
 // --- จัดการไฟล์ Static (Frontend) ---
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
-// ตั้งค่าการเชื่อมต่อฐานข้อมูล
 const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
@@ -21,7 +20,6 @@ const db = mysql.createPool({
     port: 8821             
 });
 
-// --- ROUTES สำหรับเปิดหน้าเว็บ ---
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../Frontend/index.html'));
@@ -32,9 +30,8 @@ app.get('/schedule', (req, res) => {
 });
 
 
-// --- API ENDPOINTS ---
-
-// 1. ดึงรายการบริการ
+//API
+// 1.service
 app.get('/services', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM services');
@@ -44,7 +41,7 @@ app.get('/services', async (req, res) => {
     }
 });
 
-// 2. จองคิวใหม่
+// 2.booking
 app.post('/booking', async (req, res) => {
     const { firstname, lastname, phone, service_id, booking_date, booking_time } = req.body;
     
@@ -81,7 +78,7 @@ app.post('/booking', async (req, res) => {
     }
 });
 
-// 3. ดึงนัดหมายรายวัน (แก้ไข: เพิ่ม u.phone เพื่อให้หน้าบ้านดึงไปโชว์ได้)
+// 3.
 app.get('/admin/bookings/:date', async (req, res) => {
     const { date } = req.params;
     try {
@@ -99,7 +96,7 @@ app.get('/admin/bookings/:date', async (req, res) => {
     }
 });
 
-// 4. ยกเลิกการจอง
+// 4.
 app.delete('/booking/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -110,7 +107,7 @@ app.delete('/booking/:id', async (req, res) => {
     }
 });
 
-// 5. เลื่อนนัดหมาย
+// 5. เลื่อนนัด
 app.put('/booking/:id', async (req, res) => {
     const { id } = req.params;
     const { new_date, new_time } = req.body;
